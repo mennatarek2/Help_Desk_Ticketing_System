@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/utils/date_formatter.dart';
 import '../../domain/entities/ticket.dart';
-import 'priority_badge.dart';
-import 'status_badge.dart';
+import 'priority_chip.dart';
+import 'status_chip.dart';
 
 /// List item card for a ticket.
 class TicketCard extends StatelessWidget {
@@ -26,7 +27,7 @@ class TicketCard extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppSpacing.md),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -45,7 +46,7 @@ class TicketCard extends StatelessWidget {
                     size: 14,
                     color: colorScheme.onSurfaceVariant,
                   ),
-                  const SizedBox(width: 4),
+                  const SizedBox(width: AppSpacing.xs),
                   Text(
                     DateFormatter.shortDate(ticket.createdAt),
                     style: theme.textTheme.bodySmall?.copyWith(
@@ -63,13 +64,13 @@ class TicketCard extends StatelessWidget {
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppSpacing.md),
               Wrap(
-                spacing: 8,
-                runSpacing: 8,
+                spacing: AppSpacing.sm,
+                runSpacing: AppSpacing.sm,
                 children: [
-                  PriorityBadge(priority: ticket.priority),
-                  StatusBadge(status: ticket.status),
+                  PriorityChip(priority: ticket.priority),
+                  StatusChip(status: ticket.status),
                 ],
               ),
             ],

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/constants/app_spacing.dart';
+
 /// Summary card for dashboard statistics.
-class StatSummaryCard extends StatelessWidget {
-  const StatSummaryCard({
+class DashboardCard extends StatelessWidget {
+  const DashboardCard({
     super.key,
     required this.title,
     required this.value,
@@ -22,7 +24,10 @@ class StatSummaryCard extends StatelessWidget {
 
     return Card(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: 14,
+        ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [

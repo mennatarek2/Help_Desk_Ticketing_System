@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/constants/app_spacing.dart';
+import '../../../../core/widgets/custom_dropdown.dart';
+import '../../../../core/widgets/custom_text_field.dart';
+import '../../../../core/widgets/primary_button.dart';
 import '../../domain/entities/ticket_category.dart';
 import '../../domain/entities/ticket_priority.dart';
 import '../providers/create_ticket_controller.dart';
@@ -73,7 +77,7 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
       body: Form(
         key: _formKey,
         child: ListView(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(AppSpacing.lg),
           children: [
             Text(
               'New Support Ticket',
@@ -81,7 +85,7 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
                     fontWeight: FontWeight.bold,
                   ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.sm),
             Text(
               'Fill in the details below. Ticket number and status will be '
               'assigned automatically.',
@@ -89,38 +93,28 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
             ),
-            const SizedBox(height: 24),
-            TextFormField(
+            const SizedBox(height: AppSpacing.lg),
+            CustomTextField(
               controller: _subjectController,
-              decoration: const InputDecoration(
-                labelText: 'Subject',
-                hintText: 'Brief summary of the issue',
-              ),
-              textInputAction: TextInputAction.next,
+              label: 'Subject',
+              hint: 'Brief summary of the issue',
               validator: TicketFormValidators.subject,
+              textInputAction: TextInputAction.next,
             ),
-            const SizedBox(height: 16),
-            TextFormField(
+            const SizedBox(height: AppSpacing.md),
+            CustomTextField(
               controller: _descriptionController,
-              decoration: const InputDecoration(
-                labelText: 'Description',
-                hintText: 'Describe the issue in detail',
-                alignLabelWithHint: true,
-              ),
-              maxLines: 5,
+              label: 'Description',
+              hint: 'Describe the issue in detail',
               validator: TicketFormValidators.description,
+              maxLines: 5,
             ),
-            const SizedBox(height: 16),
-            DropdownButtonFormField<TicketPriority>(
-              initialValue: _priority,
-              decoration: const InputDecoration(labelText: 'Priority'),
-              items: [
-                for (final priority in TicketPriority.values)
-                  DropdownMenuItem(
-                    value: priority,
-                    child: Text(priority.label),
-                  ),
-              ],
+            const SizedBox(height: AppSpacing.md),
+            CustomDropdown<TicketPriority>(
+              label: 'Priority',
+              value: _priority,
+              items: TicketPriority.values,
+              itemLabel: (item) => item.label,
               onChanged: _isSubmitting
                   ? null
                   : (value) {
@@ -129,17 +123,12 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
                       }
                     },
             ),
-            const SizedBox(height: 16),
-            DropdownButtonFormField<TicketCategory>(
-              initialValue: _category,
-              decoration: const InputDecoration(labelText: 'Category'),
-              items: [
-                for (final category in TicketCategory.values)
-                  DropdownMenuItem(
-                    value: category,
-                    child: Text(category.label),
-                  ),
-              ],
+            const SizedBox(height: AppSpacing.md),
+            CustomDropdown<TicketCategory>(
+              label: 'Category',
+              value: _category,
+              items: TicketCategory.values,
+              itemLabel: (item) => item.label,
               onChanged: _isSubmitting
                   ? null
                   : (value) {
@@ -148,17 +137,13 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
                       }
                     },
             ),
-            const SizedBox(height: 32),
-            FilledButton.icon(
+            const SizedBox(height: AppSpacing.xl),
+            PrimaryButton(
+              label: _isSubmitting ? 'Saving...' : 'Save Ticket',
+              icon: Icons.save_rounded,
+              isLoading: _isSubmitting,
+              expand: true,
               onPressed: _isSubmitting ? null : _submit,
-              icon: _isSubmitting
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.save_rounded),
-              label: Text(_isSubmitting ? 'Saving...' : 'Save Ticket'),
             ),
           ],
         ),

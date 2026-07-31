@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/colored_chip.dart';
 import '../../domain/entities/ticket_status.dart';
-import 'badge_chip.dart';
 
-/// Badge displaying ticket status.
-class StatusBadge extends StatelessWidget {
-  const StatusBadge({super.key, required this.status});
+/// Chip displaying ticket status.
+class StatusChip extends StatelessWidget {
+  const StatusChip({super.key, required this.status});
 
   final TicketStatus status;
 
   @override
   Widget build(BuildContext context) {
-    return BadgeChip(
+    return ColoredChip(
       label: status.label,
       color: _colorForStatus(status),
     );

@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/colored_chip.dart';
 import '../../domain/entities/ticket_priority.dart';
-import 'badge_chip.dart';
 
-/// Badge displaying ticket priority.
-class PriorityBadge extends StatelessWidget {
-  const PriorityBadge({super.key, required this.priority});
+/// Chip displaying ticket priority.
+class PriorityChip extends StatelessWidget {
+  const PriorityChip({super.key, required this.priority});
 
   final TicketPriority priority;
 
   @override
   Widget build(BuildContext context) {
-    return BadgeChip(
+    return ColoredChip(
       label: priority.label,
       color: _colorForPriority(priority),
     );

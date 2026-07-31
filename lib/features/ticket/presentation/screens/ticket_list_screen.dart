@@ -2,8 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/router/route_names.dart';
-import '../../../../core/widgets/empty_state.dart';
+import '../../../../core/widgets/custom_text_field.dart';
+import '../../../../core/widgets/empty_state_widget.dart';
+import '../../../../core/widgets/loading_widget.dart';
+import '../../../../core/widgets/primary_button.dart';
 import '../../domain/entities/ticket.dart';
 import '../../domain/entities/ticket_sort_order.dart';
 import '../../domain/entities/ticket_status.dart';
@@ -57,10 +61,17 @@ class TicketListScreen extends ConsumerWidget {
           Expanded(
             child: ticketsAsync.when(
               data: (tickets) => _TicketListBody(tickets: tickets),
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, _) => _TicketListError(
+              loading: () => const LoadingWidget(),
+              error: (error, _) => EmptyStateWidget(
+                icon: Icons.error_outline_rounded,
+                title: 'Unable to load tickets',
                 message: error.toString(),
-                onRetry: () => ref.read(ticketListProvider.notifier).refresh(),
+                action: PrimaryButton(
+                  label: 'Try Again',
+                  icon: Icons.refresh_rounded,
+                  onPressed: () =>
+                      ref.read(ticketListProvider.notifier).refresh(),
+                ),
               ),
             ),
           ),
@@ -97,7 +108,8 @@ class _TicketListControlsState extends ConsumerState<_TicketListControls> {
   @override
   void initState() {
     super.initState();
-    _searchController = TextEditingController(text: ref.read(ticketSearchProvider));
+    _searchController =
+        TextEditingController(text: ref.read(ticketSearchProvider));
   }
 
   @override
@@ -109,32 +121,35 @@ class _TicketListControlsState extends ConsumerState<_TicketListControls> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.md,
+        AppSpacing.md,
+        AppSpacing.md,
+        AppSpacing.sm,
+      ),
       child: Column(
         children: [
-          TextField(
+          CustomTextField(
             controller: _searchController,
-            decoration: InputDecoration(
-              hintText: 'Search by subject',
-              prefixIcon: const Icon(Icons.search_rounded),
-              suffixIcon: _searchController.text.isNotEmpty
-                  ? IconButton(
-                      tooltip: 'Clear search',
-                      onPressed: () {
-                        _searchController.clear();
-                        widget.onSearchChanged('');
-                        setState(() {});
-                      },
-                      icon: const Icon(Icons.close_rounded),
-                    )
-                  : null,
-            ),
+            label: 'Search',
+            hint: 'Search by subject',
+            suffixIcon: _searchController.text.isNotEmpty
+                ? IconButton(
+                    tooltip: 'Clear search',
+                    onPressed: () {
+                      _searchController.clear();
+                      widget.onSearchChanged('');
+                      setState(() {});
+                    },
+                    icon: const Icon(Icons.close_rounded),
+                  )
+                : null,
             onChanged: (value) {
               widget.onSearchChanged(value);
               setState(() {});
             },
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.md),
           Align(
             alignment: Alignment.centerLeft,
             child: SingleChildScrollView(
@@ -146,10 +161,10 @@ class _TicketListControlsState extends ConsumerState<_TicketListControls> {
                     selected: widget.statusFilter == null,
                     onSelected: (_) => widget.onStatusFilterChanged(null),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppSpacing.sm),
                   for (final status in TicketStatus.values)
                     Padding(
-                      padding: const EdgeInsets.only(right: 8),
+                      padding: const EdgeInsets.only(right: AppSpacing.sm),
                       child: FilterChip(
                         label: Text(status.label),
                         selected: widget.statusFilter == status,
@@ -181,9 +196,15 @@ class _TicketListBody extends ConsumerWidget {
     return RefreshIndicator(
       onRefresh: () => ref.read(ticketListProvider.notifier).refresh(),
       child: ListView.separated(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 88),
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.md,
+          AppSpacing.sm,
+          AppSpacing.md,
+          88,
+        ),
         itemCount: tickets.length,
-        separatorBuilder: (context, index) => const SizedBox(height: 12),
+        separatorBuilder: (context, index) =>
+            const SizedBox(height: AppSpacing.md),
         itemBuilder: (context, index) {
           final ticket = tickets[index];
 
@@ -213,62 +234,38 @@ class _EmptyTicketList extends ConsumerWidget {
     );
 
     if (hasNoTickets) {
-      return EmptyState(
+      return EmptyStateWidget(
         icon: Icons.confirmation_number_outlined,
         title: 'No tickets yet',
         message: 'Create your first support ticket to get started.',
-        action: FilledButton.icon(
+        action: PrimaryButton(
+          label: 'Create Ticket',
+          icon: Icons.add_rounded,
           onPressed: () => context.push(RouteNames.createTicket),
-          icon: const Icon(Icons.add_rounded),
-          label: const Text('Create Ticket'),
         ),
       );
     }
 
     if (hasFilters) {
-      return EmptyState(
+      return EmptyStateWidget(
         icon: Icons.search_off_rounded,
         title: 'No matching tickets',
         message: 'Try adjusting your search or filter criteria.',
-        action: OutlinedButton.icon(
+        action: PrimaryButton(
+          label: 'Clear Filters',
+          icon: Icons.filter_alt_off_outlined,
           onPressed: () {
             ref.read(ticketSearchProvider.notifier).clear();
             ref.read(ticketFilterProvider.notifier).clear();
           },
-          icon: const Icon(Icons.filter_alt_off_outlined),
-          label: const Text('Clear Filters'),
         ),
       );
     }
 
-    return const EmptyState(
+    return const EmptyStateWidget(
       icon: Icons.confirmation_number_outlined,
       title: 'No tickets found',
       message: 'There are no tickets to display.',
-    );
-  }
-}
-
-class _TicketListError extends StatelessWidget {
-  const _TicketListError({
-    required this.message,
-    required this.onRetry,
-  });
-
-  final String message;
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    return EmptyState(
-      icon: Icons.error_outline_rounded,
-      title: 'Unable to load tickets',
-      message: message,
-      action: FilledButton.icon(
-        onPressed: onRetry,
-        icon: const Icon(Icons.refresh_rounded),
-        label: const Text('Try Again'),
-      ),
     );
   }
 }

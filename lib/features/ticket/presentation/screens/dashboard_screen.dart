@@ -2,12 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/router/route_names.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/empty_state_widget.dart';
+import '../../../../core/widgets/loading_widget.dart';
+import '../../../../core/widgets/primary_button.dart';
 import '../providers/dashboard_statistics_provider.dart';
 import '../providers/ticket_list_provider.dart';
 import '../state/dashboard_statistics.dart';
-import '../widgets/stat_summary_card.dart';
+import '../widgets/dashboard_card.dart';
 
 /// Displays ticket summary statistics.
 class DashboardScreen extends ConsumerWidget {
@@ -31,10 +35,17 @@ class DashboardScreen extends ConsumerWidget {
       ),
       body: statisticsAsync.when(
         data: (statistics) => _DashboardContent(statistics: statistics),
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => _DashboardError(
+        loading: () => const LoadingWidget(),
+        error: (error, _) => EmptyStateWidget(
+          icon: Icons.error_outline_rounded,
+          title: 'Unable to load dashboard',
           message: error.toString(),
-          onRetry: () => ref.read(ticketListProvider.notifier).refresh(),
+          action: PrimaryButton(
+            label: 'Try Again',
+            icon: Icons.refresh_rounded,
+            onPressed: () =>
+                ref.read(ticketListProvider.notifier).refresh(),
+          ),
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
@@ -56,10 +67,10 @@ class _DashboardContent extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final crossAxisCount = _crossAxisCountForWidth(constraints.maxWidth);
-        const spacing = 16.0;
+        const spacing = AppSpacing.md;
 
         return SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(AppSpacing.lg),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -69,14 +80,14 @@ class _DashboardContent extends StatelessWidget {
                       fontWeight: FontWeight.bold,
                     ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.sm),
               Text(
                 'Track your support tickets at a glance.',
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: AppSpacing.lg),
               Wrap(
                 spacing: spacing,
                 runSpacing: spacing,
@@ -87,7 +98,7 @@ class _DashboardContent extends StatelessWidget {
                       crossAxisCount: crossAxisCount,
                       spacing: spacing,
                     ),
-                    child: StatSummaryCard(
+                    child: DashboardCard(
                       title: 'Total Tickets',
                       value: statistics.total,
                       icon: Icons.confirmation_number_outlined,
@@ -100,7 +111,7 @@ class _DashboardContent extends StatelessWidget {
                       crossAxisCount: crossAxisCount,
                       spacing: spacing,
                     ),
-                    child: StatSummaryCard(
+                    child: DashboardCard(
                       title: 'Open',
                       value: statistics.open,
                       icon: Icons.mark_email_unread_outlined,
@@ -113,7 +124,7 @@ class _DashboardContent extends StatelessWidget {
                       crossAxisCount: crossAxisCount,
                       spacing: spacing,
                     ),
-                    child: StatSummaryCard(
+                    child: DashboardCard(
                       title: 'In Progress',
                       value: statistics.inProgress,
                       icon: Icons.pending_actions_outlined,
@@ -126,7 +137,7 @@ class _DashboardContent extends StatelessWidget {
                       crossAxisCount: crossAxisCount,
                       spacing: spacing,
                     ),
-                    child: StatSummaryCard(
+                    child: DashboardCard(
                       title: 'Closed',
                       value: statistics.closed,
                       icon: Icons.task_alt_outlined,
@@ -162,56 +173,5 @@ class _DashboardContent extends StatelessWidget {
     }
 
     return (maxWidth - spacing * (crossAxisCount - 1)) / crossAxisCount;
-  }
-}
-
-class _DashboardError extends StatelessWidget {
-  const _DashboardError({
-    required this.message,
-    required this.onRetry,
-  });
-
-  final String message;
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.error_outline_rounded,
-              size: 48,
-              color: theme.colorScheme.error,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Unable to load dashboard',
-              style: theme.textTheme.titleLarge,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              message,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            FilledButton.icon(
-              onPressed: onRetry,
-              icon: const Icon(Icons.refresh_rounded),
-              label: const Text('Try Again'),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 }

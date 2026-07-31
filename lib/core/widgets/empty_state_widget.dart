@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 
+import '../constants/app_spacing.dart';
+
 /// Reusable empty state placeholder.
-class EmptyState extends StatelessWidget {
-  const EmptyState({
+class EmptyStateWidget extends StatelessWidget {
+  const EmptyStateWidget({
     super.key,
     required this.icon,
     required this.title,
@@ -21,7 +23,7 @@ class EmptyState extends StatelessWidget {
 
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(AppSpacing.xl),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -30,7 +32,7 @@ class EmptyState extends StatelessWidget {
               size: 64,
               color: theme.colorScheme.outline,
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: AppSpacing.lg),
             Text(
               title,
               style: theme.textTheme.titleLarge?.copyWith(
@@ -38,7 +40,7 @@ class EmptyState extends StatelessWidget {
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.sm),
             Text(
               message,
               style: theme.textTheme.bodyMedium?.copyWith(
@@ -47,7 +49,7 @@ class EmptyState extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             if (action != null) ...[
-              const SizedBox(height: 24),
+              const SizedBox(height: AppSpacing.lg),
               action!,
             ],
           ],
