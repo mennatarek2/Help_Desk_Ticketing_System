@@ -96,6 +96,36 @@ class TicketRepositoryImpl implements TicketRepository {
   @override
   Future<List<Ticket>> searchTickets(String query) async {
     final tickets = await getTickets();
+    return _applySearch(tickets, query);
+  }
+
+  @override
+  Future<List<Ticket>> filterTickets({TicketStatus? status}) async {
+    final tickets = await getTickets();
+    return _applyStatusFilter(tickets, status);
+  }
+
+  @override
+  Future<List<Ticket>> sortTickets(
+    List<Ticket> tickets,
+    TicketSortOrder sortOrder,
+  ) async {
+    return _applySort(tickets, sortOrder);
+  }
+
+  @override
+  Future<List<Ticket>> queryTickets({
+    String searchQuery = '',
+    TicketStatus? status,
+    TicketSortOrder sortOrder = TicketSortOrder.newestFirst,
+  }) async {
+    var tickets = await getTickets();
+    tickets = _applyStatusFilter(tickets, status);
+    tickets = _applySearch(tickets, searchQuery);
+    return _applySort(tickets, sortOrder);
+  }
+
+  List<Ticket> _applySearch(List<Ticket> tickets, String query) {
     final normalizedQuery = query.trim().toLowerCase();
 
     if (normalizedQuery.isEmpty) {
@@ -109,10 +139,7 @@ class TicketRepositoryImpl implements TicketRepository {
         .toList();
   }
 
-  @override
-  Future<List<Ticket>> filterTickets({TicketStatus? status}) async {
-    final tickets = await getTickets();
-
+  List<Ticket> _applyStatusFilter(List<Ticket> tickets, TicketStatus? status) {
     if (status == null) {
       return tickets;
     }
@@ -120,11 +147,7 @@ class TicketRepositoryImpl implements TicketRepository {
     return tickets.where((ticket) => ticket.status == status).toList();
   }
 
-  @override
-  Future<List<Ticket>> sortTickets(
-    List<Ticket> tickets,
-    TicketSortOrder sortOrder,
-  ) async {
+  List<Ticket> _applySort(List<Ticket> tickets, TicketSortOrder sortOrder) {
     final sortedTickets = List<Ticket>.from(tickets);
 
     sortedTickets.sort((first, second) {

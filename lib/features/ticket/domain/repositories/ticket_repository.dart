@@ -23,10 +23,8 @@ abstract class TicketRepository {
     TicketSortOrder sortOrder,
   );
 
-  /// Applies search, filter, and sort options to an in-memory ticket list.
-  List<Ticket> applyListOptions({
-    required List<Ticket> tickets,
-    String query = '',
+  Future<List<Ticket>> queryTickets({
+    String searchQuery = '',
     TicketStatus? status,
     TicketSortOrder sortOrder = TicketSortOrder.newestFirst,
   });
