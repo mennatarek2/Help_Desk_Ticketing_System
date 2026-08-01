@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/router/route_names.dart';
+import '../../../../core/widgets/async_error_view.dart';
 import '../../../../core/widgets/custom_text_field.dart';
 import '../../../../core/widgets/empty_state_widget.dart';
 import '../../../../core/widgets/loading_widget.dart';
@@ -62,16 +63,11 @@ class TicketListScreen extends ConsumerWidget {
             child: ticketsAsync.when(
               data: (tickets) => _TicketListBody(tickets: tickets),
               loading: () => const LoadingWidget(),
-              error: (error, _) => EmptyStateWidget(
-                icon: Icons.error_outline_rounded,
+              error: (error, _) => AsyncErrorView(
                 title: 'Unable to load tickets',
-                message: error.toString(),
-                action: PrimaryButton(
-                  label: 'Try Again',
-                  icon: Icons.refresh_rounded,
-                  onPressed: () =>
-                      ref.read(ticketListProvider.notifier).refresh(),
-                ),
+                error: error,
+                onRetry: () =>
+                    ref.read(ticketListProvider.notifier).refresh(),
               ),
             ),
           ),

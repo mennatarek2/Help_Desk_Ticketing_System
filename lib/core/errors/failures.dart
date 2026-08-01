@@ -1,8 +1,11 @@
 /// Base class for domain-level failures.
-abstract class Failure {
+abstract class Failure implements Exception {
   const Failure(this.message);
 
   final String message;
+
+  @override
+  String toString() => message;
 }
 
 /// Failure returned when local storage operations fail.

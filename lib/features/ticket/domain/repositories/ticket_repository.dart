@@ -1,9 +1,9 @@
 import '../entities/ticket.dart';
-import '../entities/ticket_sort_order.dart';
-import '../entities/ticket_status.dart';
 
 /// Contract for ticket data operations and business rules.
 abstract class TicketRepository {
+  Future<String> generateTicketNumber();
+
   Future<void> createTicket(Ticket ticket);
 
   Future<List<Ticket>> getTickets();
@@ -13,19 +13,4 @@ abstract class TicketRepository {
   Future<void> updateTicket(Ticket ticket);
 
   Future<void> deleteTicket(String id);
-
-  Future<List<Ticket>> searchTickets(String query);
-
-  Future<List<Ticket>> filterTickets({TicketStatus? status});
-
-  Future<List<Ticket>> sortTickets(
-    List<Ticket> tickets,
-    TicketSortOrder sortOrder,
-  );
-
-  Future<List<Ticket>> queryTickets({
-    String searchQuery = '',
-    TicketStatus? status,
-    TicketSortOrder sortOrder = TicketSortOrder.newestFirst,
-  });
 }

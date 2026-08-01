@@ -5,9 +5,9 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/router/route_names.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/widgets/empty_state_widget.dart';
+import '../../../../core/widgets/async_error_view.dart';
 import '../../../../core/widgets/loading_widget.dart';
-import '../../../../core/widgets/primary_button.dart';
+import '../../../../core/widgets/offline_banner.dart';
 import '../providers/dashboard_statistics_provider.dart';
 import '../providers/ticket_list_provider.dart';
 import '../state/dashboard_statistics.dart';
@@ -33,20 +33,22 @@ class DashboardScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: statisticsAsync.when(
-        data: (statistics) => _DashboardContent(statistics: statistics),
-        loading: () => const LoadingWidget(),
-        error: (error, _) => EmptyStateWidget(
-          icon: Icons.error_outline_rounded,
-          title: 'Unable to load dashboard',
-          message: error.toString(),
-          action: PrimaryButton(
-            label: 'Try Again',
-            icon: Icons.refresh_rounded,
-            onPressed: () =>
-                ref.read(ticketListProvider.notifier).refresh(),
+      body: Column(
+        children: [
+          const OfflineBanner(),
+          Expanded(
+            child: statisticsAsync.when(
+              data: (statistics) => _DashboardContent(statistics: statistics),
+              loading: () => const LoadingWidget(),
+              error: (error, _) => AsyncErrorView(
+                title: 'Unable to load dashboard',
+                error: error,
+                onRetry: () =>
+                    ref.read(ticketListProvider.notifier).refresh(),
+              ),
+            ),
           ),
-        ),
+        ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push(RouteNames.ticketList),

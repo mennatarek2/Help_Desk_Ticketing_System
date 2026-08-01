@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/widgets/custom_dropdown.dart';
 import '../../../../core/widgets/custom_text_field.dart';
+import '../../../../core/widgets/form_content_wrapper.dart';
 import '../../../../core/widgets/primary_button.dart';
 import '../../domain/entities/ticket_category.dart';
 import '../../domain/entities/ticket_priority.dart';
@@ -74,11 +75,12 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
       appBar: AppBar(
         title: const Text('Create Ticket'),
       ),
-      body: Form(
-        key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          children: [
+      body: FormContentWrapper(
+        child: Form(
+          key: _formKey,
+          child: ListView(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            children: [
             Text(
               'New Support Ticket',
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
@@ -145,7 +147,8 @@ class _CreateTicketScreenState extends ConsumerState<CreateTicketScreen> {
               expand: true,
               onPressed: _isSubmitting ? null : _submit,
             ),
-          ],
+            ],
+          ),
         ),
       ),
     );

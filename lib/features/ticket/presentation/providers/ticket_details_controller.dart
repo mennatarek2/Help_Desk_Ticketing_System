@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/errors/failures.dart';
+import '../../../../core/utils/failure_message.dart';
 import '../../domain/entities/ticket.dart';
 import 'ticket_list_provider.dart';
 
@@ -46,12 +46,14 @@ class TicketDetailsController {
 
       final state = _ref.read(ticketListProvider);
       if (state.hasError) {
-        return UpdateTicketFailure(_resolveErrorMessage(state.error));
+        return UpdateTicketFailure(
+          resolveFailureMessage(state.error),
+        );
       }
 
       return const UpdateTicketSuccess();
     } catch (error) {
-      return UpdateTicketFailure(_resolveErrorMessage(error));
+      return UpdateTicketFailure(resolveFailureMessage(error));
     }
   }
 
@@ -61,21 +63,15 @@ class TicketDetailsController {
 
       final state = _ref.read(ticketListProvider);
       if (state.hasError) {
-        return DeleteTicketFailure(_resolveErrorMessage(state.error));
+        return DeleteTicketFailure(
+          resolveFailureMessage(state.error),
+        );
       }
 
       return const DeleteTicketSuccess();
     } catch (error) {
-      return DeleteTicketFailure(_resolveErrorMessage(error));
+      return DeleteTicketFailure(resolveFailureMessage(error));
     }
-  }
-
-  String _resolveErrorMessage(Object? error) {
-    if (error is Failure) {
-      return error.message;
-    }
-
-    return 'Something went wrong. Please try again.';
   }
 }
 

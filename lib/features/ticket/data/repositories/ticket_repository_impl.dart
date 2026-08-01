@@ -1,16 +1,31 @@
 import '../../../../core/errors/exceptions.dart';
 import '../../../../core/errors/failures.dart';
+import '../../../../core/utils/ticket_number_generator.dart';
 import '../../domain/entities/ticket.dart';
-import '../../domain/entities/ticket_sort_order.dart';
-import '../../domain/entities/ticket_status.dart';
 import '../../domain/repositories/ticket_repository.dart';
 import '../datasources/ticket_local_datasource.dart';
+import '../datasources/ticket_settings_local_datasource.dart';
 
 /// Concrete implementation of [TicketRepository].
 class TicketRepositoryImpl implements TicketRepository {
-  TicketRepositoryImpl(this._localDataSource);
+  TicketRepositoryImpl(
+    this._localDataSource,
+    this._settingsDataSource,
+  );
 
   final TicketLocalDataSource _localDataSource;
+  final TicketSettingsLocalDataSource _settingsDataSource;
+
+  @override
+  Future<String> generateTicketNumber() async {
+    try {
+      await _ensureCounterInitialized();
+      final nextNumber = await _settingsDataSource.getNextTicketNumber();
+      return TicketNumberGenerator.format(nextNumber);
+    } on CacheException catch (error) {
+      throw CacheFailure(error.message ?? 'Unable to access local storage.');
+    }
+  }
 
   @override
   Future<void> createTicket(Ticket ticket) async {
@@ -23,6 +38,7 @@ class TicketRepositoryImpl implements TicketRepository {
       }
 
       await _localDataSource.saveTicket(ticket);
+      await _settingsDataSource.incrementTicketNumber();
     } on Failure {
       rethrow;
     } on CacheException catch (error) {
@@ -93,73 +109,9 @@ class TicketRepositoryImpl implements TicketRepository {
     }
   }
 
-  @override
-  Future<List<Ticket>> searchTickets(String query) async {
-    final tickets = await getTickets();
-    return _applySearch(tickets, query);
-  }
-
-  @override
-  Future<List<Ticket>> filterTickets({TicketStatus? status}) async {
-    final tickets = await getTickets();
-    return _applyStatusFilter(tickets, status);
-  }
-
-  @override
-  Future<List<Ticket>> sortTickets(
-    List<Ticket> tickets,
-    TicketSortOrder sortOrder,
-  ) async {
-    return _applySort(tickets, sortOrder);
-  }
-
-  @override
-  Future<List<Ticket>> queryTickets({
-    String searchQuery = '',
-    TicketStatus? status,
-    TicketSortOrder sortOrder = TicketSortOrder.newestFirst,
-  }) async {
-    var tickets = await getTickets();
-    tickets = _applyStatusFilter(tickets, status);
-    tickets = _applySearch(tickets, searchQuery);
-    return _applySort(tickets, sortOrder);
-  }
-
-  List<Ticket> _applySearch(List<Ticket> tickets, String query) {
-    final normalizedQuery = query.trim().toLowerCase();
-
-    if (normalizedQuery.isEmpty) {
-      return tickets;
-    }
-
-    return tickets
-        .where(
-          (ticket) => ticket.subject.toLowerCase().contains(normalizedQuery),
-        )
-        .toList();
-  }
-
-  List<Ticket> _applyStatusFilter(List<Ticket> tickets, TicketStatus? status) {
-    if (status == null) {
-      return tickets;
-    }
-
-    return tickets.where((ticket) => ticket.status == status).toList();
-  }
-
-  List<Ticket> _applySort(List<Ticket> tickets, TicketSortOrder sortOrder) {
-    final sortedTickets = List<Ticket>.from(tickets);
-
-    sortedTickets.sort((first, second) {
-      switch (sortOrder) {
-        case TicketSortOrder.newestFirst:
-          return second.createdAt.compareTo(first.createdAt);
-        case TicketSortOrder.oldestFirst:
-          return first.createdAt.compareTo(second.createdAt);
-      }
-    });
-
-    return sortedTickets;
+  Future<void> _ensureCounterInitialized() async {
+    final tickets = await _localDataSource.getAllTickets();
+    await _settingsDataSource.initializeCounterFromTickets(tickets);
   }
 
   void _validateTicket(Ticket ticket) {

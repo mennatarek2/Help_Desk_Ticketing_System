@@ -4,10 +4,12 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/utils/date_formatter.dart';
+import '../../../../core/widgets/async_error_view.dart';
 import '../../../../core/widgets/confirmation_dialog.dart';
 import '../../../../core/widgets/custom_dropdown.dart';
 import '../../../../core/widgets/custom_text_field.dart';
 import '../../../../core/widgets/empty_state_widget.dart';
+import '../../../../core/widgets/form_content_wrapper.dart';
 import '../../../../core/widgets/loading_widget.dart';
 import '../../../../core/widgets/primary_button.dart';
 import '../../domain/entities/ticket.dart';
@@ -190,32 +192,38 @@ class _TicketDetailsScreenState extends ConsumerState<TicketDetailsScreen> {
                 ),
             ],
           ),
-          body: _isEditing
-              ? _EditTicketForm(
-                  formKey: _formKey,
-                  subjectController: _subjectController,
-                  descriptionController: _descriptionController,
-                  priority: _priority,
-                  status: _status,
-                  onPriorityChanged: (value) {
-                    if (value != null) {
-                      setState(() => _priority = value);
-                    }
-                  },
-                  onStatusChanged: (value) {
-                    if (value != null) {
-                      setState(() => _status = value);
-                    }
-                  },
-                )
-              : _TicketDetailsView(ticket: ticket),
-          bottomNavigationBar: _TicketDetailsActions(
-            ticket: ticket,
-            isEditing: _isEditing,
-            isSaving: _isSaving,
-            isDeleting: _isDeleting,
-            onSave: () => _save(ticket),
-            onDelete: () => _delete(ticket),
+          body: Column(
+            children: [
+              Expanded(
+                child: _isEditing
+                    ? _EditTicketForm(
+                        formKey: _formKey,
+                        subjectController: _subjectController,
+                        descriptionController: _descriptionController,
+                        priority: _priority,
+                        status: _status,
+                        onPriorityChanged: (value) {
+                          if (value != null) {
+                            setState(() => _priority = value);
+                          }
+                        },
+                        onStatusChanged: (value) {
+                          if (value != null) {
+                            setState(() => _status = value);
+                          }
+                        },
+                      )
+                    : _TicketDetailsView(ticket: ticket),
+              ),
+              _TicketDetailsActions(
+                ticket: ticket,
+                isEditing: _isEditing,
+                isSaving: _isSaving,
+                isDeleting: _isDeleting,
+                onSave: () => _save(ticket),
+                onDelete: () => _delete(ticket),
+              ),
+            ],
           ),
         );
       },
@@ -225,16 +233,10 @@ class _TicketDetailsScreenState extends ConsumerState<TicketDetailsScreen> {
       ),
       error: (error, _) => Scaffold(
         appBar: AppBar(title: const Text('Ticket Details')),
-        body: EmptyStateWidget(
-          icon: Icons.error_outline_rounded,
+        body: AsyncErrorView(
           title: 'Unable to load ticket',
-          message: error.toString(),
-          action: PrimaryButton(
-            label: 'Try Again',
-            icon: Icons.refresh_rounded,
-            onPressed: () =>
-                ref.read(ticketListProvider.notifier).refresh(),
-          ),
+          error: error,
+          onRetry: () => ref.read(ticketListProvider.notifier).refresh(),
         ),
       ),
     );
@@ -248,33 +250,35 @@ class _TicketDetailsView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      children: [
-        Wrap(
-          spacing: AppSpacing.sm,
-          runSpacing: AppSpacing.sm,
-          children: [
-            PriorityChip(priority: ticket.priority),
-            StatusChip(status: ticket.status),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.lg),
-        TicketDetailTile(label: 'Ticket Number', value: ticket.ticketNumber),
-        TicketDetailTile(label: 'Subject', value: ticket.subject),
-        TicketDetailTile(label: 'Description', value: ticket.description),
-        TicketDetailTile(label: 'Priority', value: ticket.priority.label),
-        TicketDetailTile(label: 'Category', value: ticket.category.label),
-        TicketDetailTile(label: 'Status', value: ticket.status.label),
-        TicketDetailTile(
-          label: 'Created Date',
-          value: DateFormatter.display(ticket.createdAt),
-        ),
-        TicketDetailTile(
-          label: 'Last Updated',
-          value: DateFormatter.display(ticket.updatedAt),
-        ),
-      ],
+    return FormContentWrapper(
+      child: ListView(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        children: [
+          Wrap(
+            spacing: AppSpacing.sm,
+            runSpacing: AppSpacing.sm,
+            children: [
+              PriorityChip(priority: ticket.priority),
+              StatusChip(status: ticket.status),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          TicketDetailTile(label: 'Ticket Number', value: ticket.ticketNumber),
+          TicketDetailTile(label: 'Subject', value: ticket.subject),
+          TicketDetailTile(label: 'Description', value: ticket.description),
+          TicketDetailTile(label: 'Priority', value: ticket.priority.label),
+          TicketDetailTile(label: 'Category', value: ticket.category.label),
+          TicketDetailTile(label: 'Status', value: ticket.status.label),
+          TicketDetailTile(
+            label: 'Created Date',
+            value: DateFormatter.display(ticket.createdAt),
+          ),
+          TicketDetailTile(
+            label: 'Last Updated',
+            value: DateFormatter.display(ticket.updatedAt),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -300,43 +304,45 @@ class _EditTicketForm extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Form(
-      key: formKey,
-      child: ListView(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        children: [
-          CustomTextField(
-            controller: subjectController,
-            label: 'Subject',
-            hint: 'Brief summary of the issue',
-            validator: TicketFormValidators.subject,
-            textInputAction: TextInputAction.next,
-          ),
-          const SizedBox(height: AppSpacing.md),
-          CustomTextField(
-            controller: descriptionController,
-            label: 'Description',
-            hint: 'Describe the issue in detail',
-            validator: TicketFormValidators.description,
-            maxLines: 5,
-          ),
-          const SizedBox(height: AppSpacing.md),
-          CustomDropdown<TicketPriority>(
-            label: 'Priority',
-            value: priority,
-            items: TicketPriority.values,
-            itemLabel: (item) => item.label,
-            onChanged: onPriorityChanged,
-          ),
-          const SizedBox(height: AppSpacing.md),
-          CustomDropdown<TicketStatus>(
-            label: 'Status',
-            value: status,
-            items: TicketStatus.values,
-            itemLabel: (item) => item.label,
-            onChanged: onStatusChanged,
-          ),
-        ],
+    return FormContentWrapper(
+      child: Form(
+        key: formKey,
+        child: ListView(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          children: [
+            CustomTextField(
+              controller: subjectController,
+              label: 'Subject',
+              hint: 'Brief summary of the issue',
+              validator: TicketFormValidators.subject,
+              textInputAction: TextInputAction.next,
+            ),
+            const SizedBox(height: AppSpacing.md),
+            CustomTextField(
+              controller: descriptionController,
+              label: 'Description',
+              hint: 'Describe the issue in detail',
+              validator: TicketFormValidators.description,
+              maxLines: 5,
+            ),
+            const SizedBox(height: AppSpacing.md),
+            CustomDropdown<TicketPriority>(
+              label: 'Priority',
+              value: priority,
+              items: TicketPriority.values,
+              itemLabel: (item) => item.label,
+              onChanged: onPriorityChanged,
+            ),
+            const SizedBox(height: AppSpacing.md),
+            CustomDropdown<TicketStatus>(
+              label: 'Status',
+              value: status,
+              items: TicketStatus.values,
+              itemLabel: (item) => item.label,
+              onChanged: onStatusChanged,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -364,37 +370,50 @@ class _TicketDetailsActions extends StatelessWidget {
     final theme = Theme.of(context);
 
     return SafeArea(
+      top: false,
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            if (isEditing)
-              PrimaryButton(
-                label: isSaving ? 'Saving...' : 'Save Changes',
-                icon: Icons.save_rounded,
-                isLoading: isSaving,
-                expand: true,
-                onPressed: isSaving ? null : onSave,
-              ),
-            if (!isEditing) ...[
-              OutlinedButton.icon(
-                onPressed: isDeleting ? null : onDelete,
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: theme.colorScheme.error,
-                  side: BorderSide(color: theme.colorScheme.error),
-                  minimumSize: const Size.fromHeight(48),
+            Flexible(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 600),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (isEditing)
+                      PrimaryButton(
+                        label: isSaving ? 'Saving...' : 'Save Changes',
+                        icon: Icons.save_rounded,
+                        isLoading: isSaving,
+                        expand: true,
+                        onPressed: isSaving ? null : onSave,
+                      ),
+                    if (!isEditing) ...[
+                      OutlinedButton.icon(
+                        onPressed: isDeleting ? null : onDelete,
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: theme.colorScheme.error,
+                          side: BorderSide(color: theme.colorScheme.error),
+                          minimumSize: const Size.fromHeight(48),
+                        ),
+                        icon: isDeleting
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : const Icon(Icons.delete_outline_rounded),
+                        label:
+                            Text(isDeleting ? 'Deleting...' : 'Delete Ticket'),
+                      ),
+                    ],
+                  ],
                 ),
-                icon: isDeleting
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.delete_outline_rounded),
-                label: Text(isDeleting ? 'Deleting...' : 'Delete Ticket'),
               ),
-            ],
+            ),
           ],
         ),
       ),
