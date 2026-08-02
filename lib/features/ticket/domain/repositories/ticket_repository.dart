@@ -1,4 +1,5 @@
 import '../entities/ticket.dart';
+import '../entities/ticket_history_entry.dart';
 
 /// Contract for ticket data operations and business rules.
 abstract class TicketRepository {
@@ -13,4 +14,8 @@ abstract class TicketRepository {
   Future<void> updateTicket(Ticket ticket);
 
   Future<void> deleteTicket(String id);
+
+  Future<String> exportTicketsToJson();
+
+  Future<List<TicketHistoryEntry>> getTicketHistory(String ticketId);
 }

@@ -10,4 +10,10 @@ abstract class TicketSettingsLocalDataSource {
 
   /// Initializes the counter from existing tickets when no value is stored.
   Future<void> initializeCounterFromTickets(List<Ticket> tickets);
+
+  /// Returns the stored theme mode name (`system`, `light`, or `dark`).
+  Future<String> getThemeModeName();
+
+  /// Persists the theme mode name.
+  Future<void> setThemeModeName(String themeModeName);
 }

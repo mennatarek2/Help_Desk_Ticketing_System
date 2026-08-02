@@ -77,4 +77,31 @@ class TicketSettingsLocalDataSourceImpl implements TicketSettingsLocalDataSource
       highestNumber + 1,
     );
   }
+
+  @override
+  Future<String> getThemeModeName() async {
+    _ensureInitialized();
+
+    try {
+      final value = _settingsBox.get(HiveConstants.themeModeKey);
+      if (value is String && value.isNotEmpty) {
+        return value;
+      }
+
+      return 'system';
+    } catch (_) {
+      throw const CacheException('Failed to read theme mode.');
+    }
+  }
+
+  @override
+  Future<void> setThemeModeName(String themeModeName) async {
+    _ensureInitialized();
+
+    try {
+      await _settingsBox.put(HiveConstants.themeModeKey, themeModeName);
+    } catch (_) {
+      throw const CacheException('Failed to save theme mode.');
+    }
+  }
 }

@@ -1,6 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/services/hive_service.dart';
+import '../../data/datasources/ticket_history_local_datasource.dart';
+import '../../data/datasources/ticket_history_local_datasource_impl.dart';
 import '../../data/datasources/ticket_local_datasource.dart';
 import '../../data/datasources/ticket_local_datasource_impl.dart';
 import '../../data/datasources/ticket_settings_local_datasource.dart';
@@ -26,9 +28,21 @@ final ticketSettingsLocalDataSourceProvider =
   return TicketSettingsLocalDataSourceImpl(hiveService);
 });
 
+/// Provides the ticket history local data source.
+final ticketHistoryLocalDataSourceProvider =
+    Provider<TicketHistoryLocalDataSource>((ref) {
+  final hiveService = ref.watch(hiveServiceProvider);
+  return TicketHistoryLocalDataSourceImpl(hiveService);
+});
+
 /// Provides the ticket repository.
 final ticketRepositoryProvider = Provider<TicketRepository>((ref) {
   final localDataSource = ref.watch(ticketLocalDataSourceProvider);
   final settingsDataSource = ref.watch(ticketSettingsLocalDataSourceProvider);
-  return TicketRepositoryImpl(localDataSource, settingsDataSource);
+  final historyDataSource = ref.watch(ticketHistoryLocalDataSourceProvider);
+  return TicketRepositoryImpl(
+    localDataSource,
+    settingsDataSource,
+    historyDataSource,
+  );
 });

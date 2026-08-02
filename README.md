@@ -16,6 +16,9 @@ A Flutter application for managing help desk tickets using local storage. The pr
 * Sort tickets by creation date
 * Local data persistence using Hive
 * Responsive Material 3 interface
+* Dark mode toggle with persisted preference
+* Export all tickets to JSON
+* Ticket history timeline on ticket details
 
 ---
 
@@ -100,6 +103,9 @@ The application separates UI from business logic by using providers and controll
 * Updating tickets
 * Deleting tickets
 * Dashboard statistics
+* Theme mode
+* JSON export
+* Ticket history
 * Search
 * Filter
 * Sort
@@ -113,6 +119,12 @@ Search, filtering, and sorting are performed in memory using Riverpod providers 
 Hive is used as the local database.
 
 All ticket data is stored locally and remains available after closing and reopening the application.
+
+Hive boxes used:
+
+* `tickets` — ticket records
+* `ticket_history` — create/update audit entries
+* `app_settings` — ticket counter and theme mode
 
 Ticket numbers are generated using a persistent counter stored in Hive to ensure that every ticket number remains unique, even if previous tickets are deleted.
 
@@ -150,14 +162,16 @@ flutter analyze
 * Ticket numbers are generated using a persistent counter to prevent duplicates.
 * Search, filtering, and sorting are handled in memory to reduce unnecessary storage access.
 * Reusable widgets are used throughout the application to keep the UI consistent and reduce duplicated code.
+* Theme mode is persisted in the settings box and toggled from the dashboard app bar.
+* Ticket history is recorded in the repository on create/update and shown on the details screen.
+* JSON export writes all tickets to a timestamped file in the app documents directory.
 
 ---
 
 ## Possible Future Improvements
 
-* Export tickets to JSON or CSV
-* Dark mode toggle
-* Unit and widget tests
+* CSV export
+* More unit and widget tests
 * Ticket attachments
 * User authentication
 * Backend integration with REST APIs
@@ -171,6 +185,7 @@ flutter analyze
 * Ticket data is stored only on the device.
 * Search is performed using the ticket subject.
 * Ticket numbers follow the `TKT-00001` format and are generated sequentially.
+* Ticket history is removed when a ticket is deleted.
 * The application is intended to work completely without an internet connection.
 
 ---

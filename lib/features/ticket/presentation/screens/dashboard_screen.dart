@@ -3,28 +3,82 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_spacing.dart';
+import '../../../../core/providers/theme_mode_provider.dart';
 import '../../../../core/router/route_names.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/async_error_view.dart';
 import '../../../../core/widgets/loading_widget.dart';
 import '../../../../core/widgets/offline_banner.dart';
 import '../providers/dashboard_statistics_provider.dart';
+import '../providers/export_tickets_controller.dart';
 import '../providers/ticket_list_provider.dart';
 import '../state/dashboard_statistics.dart';
 import '../widgets/dashboard_card.dart';
 
 /// Displays ticket summary statistics.
-class DashboardScreen extends ConsumerWidget {
+class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends ConsumerState<DashboardScreen> {
+  bool _isExporting = false;
+
+  Future<void> _exportTickets() async {
+    setState(() => _isExporting = true);
+
+    final result = await ref.read(exportTicketsControllerProvider).export();
+
+    if (!mounted) {
+      return;
+    }
+
+    setState(() => _isExporting = false);
+
+    switch (result) {
+      case ExportTicketsSuccess(:final filePath):
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Exported to $filePath')),
+        );
+      case ExportTicketsFailure(:final message):
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final statisticsAsync = ref.watch(dashboardStatisticsProvider);
+    final themeMode = ref.watch(themeModeProvider).value ?? ThemeMode.system;
+    final isDark = themeMode == ThemeMode.dark ||
+        (themeMode == ThemeMode.system &&
+            MediaQuery.platformBrightnessOf(context) == Brightness.dark);
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Dashboard'),
         actions: [
+          IconButton(
+            tooltip: isDark ? 'Switch to light mode' : 'Switch to dark mode',
+            onPressed: () => ref.read(themeModeProvider.notifier).toggle(),
+            icon: Icon(
+              isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
+            ),
+          ),
+          IconButton(
+            tooltip: 'Export tickets',
+            onPressed: _isExporting ? null : _exportTickets,
+            icon: _isExporting
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.download_rounded),
+          ),
           IconButton(
             tooltip: 'Refresh',
             onPressed: () =>

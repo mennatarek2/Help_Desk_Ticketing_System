@@ -17,11 +17,13 @@ import '../../domain/entities/ticket_priority.dart';
 import '../../domain/entities/ticket_status.dart';
 import '../providers/ticket_by_id_provider.dart';
 import '../providers/ticket_details_controller.dart';
+import '../providers/ticket_history_provider.dart';
 import '../providers/ticket_list_provider.dart';
 import '../utils/ticket_form_validators.dart';
 import '../widgets/priority_chip.dart';
 import '../widgets/status_chip.dart';
 import '../widgets/ticket_detail_tile.dart';
+import '../widgets/ticket_history_timeline.dart';
 
 /// Displays and edits a single ticket.
 class TicketDetailsScreen extends ConsumerStatefulWidget {
@@ -103,6 +105,7 @@ class _TicketDetailsScreenState extends ConsumerState<TicketDetailsScreen> {
 
     switch (result) {
       case UpdateTicketSuccess():
+        ref.invalidate(ticketHistoryProvider(ticket.id));
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Ticket updated successfully')),
         );
@@ -243,13 +246,13 @@ class _TicketDetailsScreenState extends ConsumerState<TicketDetailsScreen> {
   }
 }
 
-class _TicketDetailsView extends StatelessWidget {
+class _TicketDetailsView extends ConsumerWidget {
   const _TicketDetailsView({required this.ticket});
 
   final Ticket ticket;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return FormContentWrapper(
       child: ListView(
         padding: const EdgeInsets.all(AppSpacing.lg),
@@ -277,6 +280,15 @@ class _TicketDetailsView extends StatelessWidget {
             label: 'Last Updated',
             value: DateFormatter.display(ticket.updatedAt),
           ),
+          const SizedBox(height: AppSpacing.lg),
+          Text(
+            'History',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          TicketHistoryTimeline(ticketId: ticket.id),
         ],
       ),
     );
